@@ -65,7 +65,7 @@ class CallScreen extends StatelessWidget {
                   const _RingAvatar(),
                   const SizedBox(height: 38),
                   const Text(
-                    'Pearl Luna',
+                    'Spider Man',
                     style: TextStyle(
                       fontSize: 22,
                       fontWeight: FontWeight.w700,

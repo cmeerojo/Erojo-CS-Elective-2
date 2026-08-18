@@ -1,218 +1,223 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 void main() {
   runApp(const MyApp());
 }
+
+class Fruit {
+  const Fruit({
+    required this.name,
+    required this.emoji,
+    required this.color,
+    required this.description,
+  });
+
+  final String name;
+  final String emoji;
+  final Color color;
+  final String description;
+}
+
+const List<Fruit> fruits = [
+  Fruit(
+    name: 'Apple',
+    emoji: '🍎',
+    color: Color(0xFFFF6B6B),
+    description: 'Crisp, juicy, and perfect for a healthy snack.',
+  ),
+  Fruit(
+    name: 'Banana',
+    emoji: '🍌',
+    color: Color(0xFFF7D154),
+    description: 'A sweet tropical fruit that grows in clusters.',
+  ),
+  Fruit(
+    name: 'Grape',
+    emoji: '🍇',
+    color: Color(0xFF9B59B6),
+    description: 'Small, sweet berries often eaten fresh or turned into wine.',
+  ),
+  Fruit(
+    name: 'Orange',
+    emoji: '🍊',
+    color: Color(0xFFFFA726),
+    description: 'Bright and citrusy, known for its vitamin C.',
+  ),
+  Fruit(
+    name: 'Strawberry',
+    emoji: '🍓',
+    color: Color(0xFFE74C3C),
+    description: 'A red summer favorite with a sweet, juicy taste.',
+  ),
+  Fruit(
+    name: 'Watermelon',
+    emoji: '🍉',
+    color: Color(0xFF2ECC71),
+    description: 'A refreshing fruit with lots of water and a sweet flavor.',
+  ),
+  Fruit(
+    name: 'Pear',
+    emoji: '🍐',
+    color: Color(0xFF7CB342),
+    description: 'Smooth and subtly sweet, with a mild floral flavor.',
+  ),
+  Fruit(
+    name: 'Peach',
+    emoji: '🍑',
+    color: Color(0xFFFFB74D),
+    description: 'A fuzzy fruit with soft, juicy flesh and a sweet aroma.',
+  ),
+];
+
+final GoRouter router = GoRouter(
+  routes: [
+    ShellRoute(
+      builder: (context, state, child) {
+        return FruitShell(child: child);
+      },
+      routes: [
+        GoRoute(
+          path: '/',
+          builder: (context, state) => const FruitListPage(),
+        ),
+        GoRoute(
+          path: '/fruit/:name',
+          builder: (context, state) {
+            final fruitName = state.pathParameters['name'] ?? '';
+            final selectedFruit = fruits.firstWhere(
+              (fruit) => fruit.name.toLowerCase() == fruitName.toLowerCase(),
+              orElse: () => fruits.first,
+            );
+            return FruitDetailPage(fruit: selectedFruit);
+          },
+        ),
+      ],
+    ),
+  ],
+);
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return MaterialApp.router(
+      routerConfig: router,
+      title: 'Fruit Router Demo',
       debugShowCheckedModeBanner: false,
-      title: 'Dialing Screen',
       theme: ThemeData(
         useMaterial3: true,
-        scaffoldBackgroundColor: const Color(0xFFF6F8FC),
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF22B7E6),
-          brightness: Brightness.light,
-        ),
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.green),
       ),
-      home: const CallScreen(),
     );
   }
 }
 
-class CallScreen extends StatelessWidget {
-  const CallScreen({super.key});
+class FruitShell extends StatelessWidget {
+  const FruitShell({super.key, required this.child});
+
+  final Widget child;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: SafeArea(
-        child: Center(
-          child: Container(
-            width: 320,
-            height: 680,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(34),
-              border: Border.all(color: const Color(0xFFE7EBF1), width: 1.2),
-              boxShadow: const [
-                BoxShadow(
-                  color: Color(0x26000000),
-                  blurRadius: 24,
-                  offset: Offset(0, 12),
-                ),
-              ],
-            ),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-              child: Column(
-                children: [
-                  const SizedBox(height: 8),
-                  const Text(
-                    'Dialing',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w500,
-                      color: Color(0xFF1D1D1F),
-                    ),
-                  ),
-                  const SizedBox(height: 34),
-                  const _RingAvatar(),
-                  const SizedBox(height: 38),
-                  const Text(
-                    'Spider Man',
-                    style: TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.w700,
-                      color: Color(0xFF17181C),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  const Text(
-                    '+ 476-229-9449',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w400,
-                      color: Color(0xFF111111),
-                    ),
-                  ),
-                  const SizedBox(height: 36),
-                  Container(height: 1, color: const Color(0xFFE6E7EC)),
-                  const Spacer(),
-                  const Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      _ActionItem(icon: Icons.mic_none, label: 'Mute'),
-                      _ActionItem(icon: Icons.bluetooth, label: 'Bluetooth'),
-                      _ActionItem(icon: Icons.pause_circle_outline, label: 'Hold'),
-                    ],
-                  ),
-                  const SizedBox(height: 38),
-                  const Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      _ActionItem(icon: Icons.grid_view_rounded, label: ''),
-                      _CallButton(),
-                      _ActionItem(icon: Icons.volume_up_outlined, label: ''),
-                    ],
-                  ),
-                  const SizedBox(height: 18),
-                ],
-              ),
-            ),
-          ),
-        ),
+      appBar: AppBar(
+        title: const Text('Fruit Demo'),
+        centerTitle: true,
       ),
+      body: child,
     );
   }
 }
 
-class _RingAvatar extends StatelessWidget {
-  const _RingAvatar();
+class FruitListPage extends StatelessWidget {
+  const FruitListPage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: 168,
-      height: 168,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        gradient: const RadialGradient(
-          colors: [
-            Color(0xFFF1FBFD),
-            Color(0xFFC6F0FA),
-            Color(0xFF67D5F0),
-          ],
-          stops: [0.36, 0.72, 1.0],
-        ),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x12000000),
-            blurRadius: 12,
-            offset: Offset(0, 6),
-          ),
-        ],
-      ),
-      child: Center(
-        child: Container(
-          width: 128,
-          height: 128,
-          decoration: const BoxDecoration(
-            shape: BoxShape.circle,
-            color: Color(0xFF7FDDF1),
-          ),
-          child: Center(
-            child: Container(
-              width: 112,
-              height: 112,
-              decoration: const BoxDecoration(
-                shape: BoxShape.circle,
-                color: Colors.white,
-              ),
-              child: const Center(
-                child: CircleAvatar(
-                  radius: 44,
-                  backgroundColor: Color(0xFFBFE7F0),
-                  child: Icon(Icons.person, size: 58, color: Color(0xFF1080A8)),
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _ActionItem extends StatelessWidget {
-  const _ActionItem({required this.icon, required this.label});
-
-  final IconData icon;
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: 76,
+    return Padding(
+      padding: const EdgeInsets.all(16),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, size: 28, color: const Color(0xFF8B9099)),
-          if (label.isNotEmpty) ...[
-            const SizedBox(height: 8),
-            Text(
-              label,
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontSize: 13,
-                color: Color(0xFF666A73),
-                fontWeight: FontWeight.w400,
-              ),
+          const Text(
+            'Fruit List',
+            style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 16),
+          Expanded(
+            child: ListView.builder(
+              itemCount: fruits.length,
+              itemBuilder: (context, index) {
+                final fruit = fruits[index];
+                return Card(
+                  margin: const EdgeInsets.only(bottom: 12),
+                  child: ListTile(
+                    leading: CircleAvatar(
+                      backgroundColor: fruit.color.withAlpha(40),
+                      child: Text(fruit.emoji, style: const TextStyle(fontSize: 24)),
+                    ),
+                    title: Text(fruit.name),
+                    trailing: const Icon(Icons.arrow_forward_ios_rounded),
+                    onTap: () {
+                      context.go('/fruit/${fruit.name}');
+                    },
+                  ),
+                );
+              },
             ),
-          ],
+          ),
         ],
       ),
     );
   }
 }
 
-class _CallButton extends StatelessWidget {
-  const _CallButton();
+class FruitDetailPage extends StatelessWidget {
+  const FruitDetailPage({super.key, required this.fruit});
+
+  final Fruit fruit;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: 58,
-      height: 58,
-      decoration: const BoxDecoration(
-        shape: BoxShape.circle,
-        color: Color(0xFF18B8EA),
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              fruit.emoji,
+              style: const TextStyle(fontSize: 120),
+            ),
+            const SizedBox(height: 20),
+            Text(
+              fruit.name,
+              style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: BoxDecoration(
+                color: fruit.color.withAlpha(30),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Text(
+                fruit.description,
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontSize: 16),
+              ),
+            ),
+            const SizedBox(height: 28),
+            ElevatedButton.icon(
+              onPressed: () => context.go('/'),
+              icon: const Icon(Icons.arrow_back),
+              label: const Text('Back to fruit list'),
+            ),
+          ],
+        ),
       ),
-      child: const Icon(Icons.call, color: Colors.white, size: 28),
     );
   }
 }

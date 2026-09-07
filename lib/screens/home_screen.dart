@@ -17,6 +17,12 @@ class HomeScreen extends StatelessWidget {
         title: const Text('JDM Showroom'),
         actions: [
           IconButton(
+            icon: const Icon(Icons.shopping_cart),
+            onPressed: () {
+              context.push('/cart');
+            },
+          ),
+          IconButton(
             icon: Icon(
               Theme.of(context).brightness == Brightness.dark
                   ? Icons.light_mode

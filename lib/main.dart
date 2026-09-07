@@ -2,9 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'screens/home_screen.dart';
 import 'screens/detail_screen.dart';
+import 'screens/cart_screen.dart';
+import 'screens/checkout_screen.dart';
+import 'package:provider/provider.dart';
+import 'providers/cart_provider.dart';
 
 void main() {
-  runApp(const ShopApp());
+  runApp(
+    ChangeNotifierProvider(
+      create: (context) => CartProvider(),
+      child: const ShopApp(),
+    ),
+  );
 }
 
 // Stateful widget is required here to manage the ThemeMode (Light/Dark) across the entire app
@@ -38,6 +47,14 @@ class _ShopAppState extends State<ShopApp> {
           final carId = state.pathParameters['id']!;
           return DetailScreen(carId: carId);
         },
+      ),
+      GoRoute(
+        path: '/cart',
+        builder: (context, state) => const CartScreen(),
+      ),
+      GoRoute(
+        path: '/checkout',
+        builder: (context, state) => const CheckoutScreen(),
       ),
     ],
   );

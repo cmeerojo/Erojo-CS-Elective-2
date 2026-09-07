@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:go_router/go_router.dart';
 import '../models/car.dart';
+import '../providers/cart_provider.dart';
 
 class DetailScreen extends StatelessWidget {
   final String carId;
@@ -73,10 +76,17 @@ class DetailScreen extends StatelessWidget {
                     height: 50,
                     child: ElevatedButton.icon(
                       onPressed: () {
+                        Provider.of<CartProvider>(context, listen: false).addItem(car);
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Cart functionality coming in Phase 2!'),
-                            duration: Duration(seconds: 2),
+                          SnackBar(
+                            content: Text('${car.name} added to cart!'),
+                            duration: const Duration(seconds: 2),
+                            action: SnackBarAction(
+                              label: 'VIEW CART',
+                              onPressed: () {
+                                context.push('/cart');
+                              },
+                            ),
                           ),
                         );
                       },

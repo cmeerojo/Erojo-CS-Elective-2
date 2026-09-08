@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:go_router/go_router.dart';
 import '../models/car.dart';
 import '../providers/cart_provider.dart';
 
@@ -8,8 +7,13 @@ import '../providers/cart_provider.dart';
 // Receives `carId` passed as a dynamic parameter via Navigation 2.0 (go_router).
 class DetailScreen extends StatelessWidget {
   final String carId; // Unique car ID retrieved from route parameters
+  final VoidCallback onViewCart;
 
-  const DetailScreen({Key? key, required this.carId}) : super(key: key);
+  const DetailScreen({
+    Key? key,
+    required this.carId,
+    required this.onViewCart,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -106,7 +110,7 @@ class DetailScreen extends StatelessWidget {
                             action: SnackBarAction(
                               label: 'VIEW CART',
                               onPressed: () {
-                                context.push('/cart'); // Opens the cart while preserving back navigation
+                                onViewCart();
                               },
                             ),
                           ),

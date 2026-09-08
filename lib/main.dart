@@ -57,7 +57,10 @@ class _ShopAppState extends State<ShopApp> {
         builder: (context, state) {
           // Extracts the car ID from URL parameters (e.g., /car/1 -> id = '1')
           final carId = state.pathParameters['id']!;
-          return DetailScreen(carId: carId);
+          return DetailScreen(
+            carId: carId,
+            onViewCart: () => _router.push('/cart'),
+          );
         },
       ),
       // Route 3: Shopping Cart Screen

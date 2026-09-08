@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
-import 'screens/home_screen.dart';
-import 'screens/detail_screen.dart';
-import 'screens/cart_screen.dart';
-import 'screens/checkout_screen.dart';
 import 'package:provider/provider.dart';
+
 import 'providers/cart_provider.dart';
+import 'routing/app_router.dart';
+import 'theme/app_theme.dart';
 
 // Entry point of the Flutter application.
 void main() {
@@ -20,110 +18,31 @@ void main() {
   );
 }
 
-// Root application widget defined as a StatefulWidget.
-// It is stateful so it can hold and toggle the global `_themeMode` state (Light vs Dark mode).
 class ShopApp extends StatefulWidget {
-  const ShopApp({Key? key}) : super(key: key);
+  const ShopApp({super.key});
 
   @override
   State<ShopApp> createState() => _ShopAppState();
 }
 
 class _ShopAppState extends State<ShopApp> {
-  // State variable storing the active theme mode (defaults to Light mode)
   ThemeMode _themeMode = ThemeMode.light;
+  late final router = createAppRouter(onToggleTheme: _toggleTheme);
 
-  // Toggles theme between Light and Dark modes.
-  // Calling setState triggers a rebuild of MaterialApp with the new themeMode.
   void _toggleTheme() {
     setState(() {
       _themeMode = _themeMode == ThemeMode.light ? ThemeMode.dark : ThemeMode.light;
     });
   }
 
-  // Navigation 2.0 implementation using the `go_router` package.
-  // Defines all available routes and paths in the application declaratively.
-  late final GoRouter _router = GoRouter(
-    initialLocation: '/', // App opens on the Home screen route
-    routes: [
-      // Route 1: Home Screen (Product Grid)
-      GoRoute(
-        path: '/',
-        builder: (context, state) => HomeScreen(onToggleTheme: _toggleTheme),
-      ),
-      // Route 2: Product Detail Screen (with dynamic path parameter :id)
-      GoRoute(
-        path: '/car/:id',
-        builder: (context, state) {
-          // Extracts the car ID from URL parameters (e.g., /car/1 -> id = '1')
-          final carId = state.pathParameters['id']!;
-          return DetailScreen(
-            carId: carId,
-            onViewCart: () => _router.push('/cart'),
-          );
-        },
-      ),
-      // Route 3: Shopping Cart Screen
-      GoRoute(
-        path: '/cart',
-        builder: (context, state) => const CartScreen(),
-      ),
-      // Route 4: Checkout Confirmation Screen
-      GoRoute(
-        path: '/checkout',
-        builder: (context, state) => const CheckoutScreen(),
-      ),
-    ],
-  );
-
   @override
   Widget build(BuildContext context) {
-    // MaterialApp.router configures Flutter to use Navigation 2.0 via routerConfig
     return MaterialApp.router(
       title: 'JDM Showroom',
-      themeMode: _themeMode, // Applied theme mode state (Light or Dark)
-      
-      // Global ThemeData for Light Mode - applies consistent colors across all screens
-      theme: ThemeData(
-        brightness: Brightness.light,
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFFE4572E),
-          brightness: Brightness.light,
-        ),
-        scaffoldBackgroundColor: const Color(0xFFF7F3EE),
-        useMaterial3: true,
-        appBarTheme: const AppBarTheme(
-          backgroundColor: Color(0xFFF7F3EE),
-          foregroundColor: Color(0xFF202124),
-          centerTitle: false,
-          elevation: 0,
-        ),
-        cardTheme: CardThemeData(
-          color: Colors.white,
-          elevation: 2,
-          shadowColor: Color(0x33202124),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.all(Radius.circular(16)),
-          ),
-        ),
-      ),
-      
-      // Global ThemeData for Dark Mode - automatically used when _themeMode is dark
-      darkTheme: ThemeData(
-        brightness: Brightness.dark,
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFFFF7652),
-          brightness: Brightness.dark,
-        ),
-        useMaterial3: true,
-        appBarTheme: const AppBarTheme(
-          centerTitle: false,
-          elevation: 0,
-        ),
-      ),
-      
-      // Plugs in the Navigation 2.0 GoRouter configuration
-      routerConfig: _router,
+      themeMode: _themeMode,
+      theme: AppTheme.light,
+      darkTheme: AppTheme.dark,
+      routerConfig: router,
     );
   }
 }

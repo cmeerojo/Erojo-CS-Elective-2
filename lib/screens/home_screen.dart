@@ -5,7 +5,7 @@ import '../models/car.dart';
 // HomeScreen displays the product catalog in a grid view.
 // It is a StatelessWidget because it doesn't hold any mutable internal state; 
 // it receives the onToggleTheme callback to delegate theme toggling upwards to ShopApp.
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   // Callback passed from parent (ShopApp) to switch between Light and Dark mode
   final VoidCallback onToggleTheme;
 
@@ -13,6 +13,23 @@ class HomeScreen extends StatelessWidget {
     Key? key,
     required this.onToggleTheme,
   }) : super(key: key);
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  static const _allBrands = 'All brands';
+  String _selectedBrand = _allBrands;
+
+  List<String> get _brands {
+    final brands = dummyCars.map((car) => car.brand).toSet().toList()..sort();
+    return [_allBrands, ...brands];
+  }
+
+  List<Car> get _filteredCars => _selectedBrand == _allBrands
+      ? dummyCars
+      : dummyCars.where((car) => car.brand == _selectedBrand).toList();
 
   @override
   Widget build(BuildContext context) {
@@ -47,36 +64,61 @@ class HomeScreen extends StatelessWidget {
                   ? Icons.light_mode
                   : Icons.dark_mode,
             ),
-            onPressed: onToggleTheme,
+            onPressed: widget.onToggleTheme,
           ),
         ],
       ),
-      
-      // LayoutBuilder inspects the parent constraints (screen width) to implement Responsive Design
-      body: LayoutBuilder(
-        builder: (context, constraints) {
-          // Dynamic grid calculation: 
-          // If screen width is under 600px (mobile phone), show 2 columns.
-          // If screen width is 600px or larger (tablet/desktop), show 3 columns.
-          int crossAxisCount = constraints.maxWidth < 600 ? 2 : 3;
-
-          // GridView.builder lazily builds product cards as they scroll into view for optimal performance
-          return GridView.builder(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: crossAxisCount, // Dynamically computed column count
-              childAspectRatio: 0.72,         // Width-to-height ratio for card dimensions
-              crossAxisSpacing: 16,           // Horizontal spacing between grid cards
-              mainAxisSpacing: 16,            // Vertical spacing between grid cards
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+            child: DropdownButtonFormField<String>(
+              value: _selectedBrand,
+              decoration: const InputDecoration(
+                labelText: 'Filter by brand',
+                border: OutlineInputBorder(),
+                isDense: true,
+              ),
+              items: _brands
+                  .map(
+                    (brand) => DropdownMenuItem<String>(
+                      value: brand,
+                      child: Text(brand),
+                    ),
+                  )
+                  .toList(),
+              onChanged: (brand) {
+                if (brand != null) {
+                  setState(() => _selectedBrand = brand);
+                }
+              },
             ),
-            itemCount: dummyCars.length,
-            itemBuilder: (context, index) {
-              final car = dummyCars[index];
-              // Renders an individual car card widget for each item in the dataset
-              return CarCard(car: car);
-            },
-          );
-        },
+          ),
+          Expanded(
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final crossAxisCount = constraints.maxWidth < 600 ? 2 : 3;
+                final cars = _filteredCars;
+
+                if (cars.isEmpty) {
+                  return const Center(child: Text('No cars found'));
+                }
+
+                return GridView.builder(
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: crossAxisCount,
+                    childAspectRatio: 0.72,
+                    crossAxisSpacing: 16,
+                    mainAxisSpacing: 16,
+                  ),
+                  itemCount: cars.length,
+                  itemBuilder: (context, index) => CarCard(car: cars[index]),
+                );
+              },
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -19,7 +19,19 @@ class HomeScreen extends StatelessWidget {
     return Scaffold(
       // Standard Material App Bar displayed at the top of the Home screen
       appBar: AppBar(
-        title: const Text('JDM Showroom'),
+        title: const Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'JDM Showroom',
+              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800, letterSpacing: 1.4),
+            ),
+            Text(
+              'Curated icons from Japan',
+              style: TextStyle(fontSize: 12, fontWeight: FontWeight.normal),
+            ),
+          ],
+        ),
         actions: [
           // Shopping cart action button navigating to the Cart screen via Navigation 2.0
           IconButton(
@@ -50,10 +62,10 @@ class HomeScreen extends StatelessWidget {
 
           // GridView.builder lazily builds product cards as they scroll into view for optimal performance
           return GridView.builder(
-            padding: const EdgeInsets.all(16.0),
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: crossAxisCount, // Dynamically computed column count
-              childAspectRatio: 0.75,         // Width-to-height ratio for card dimensions
+              childAspectRatio: 0.72,         // Width-to-height ratio for card dimensions
               crossAxisSpacing: 16,           // Horizontal spacing between grid cards
               mainAxisSpacing: 16,            // Vertical spacing between grid cards
             ),
@@ -80,10 +92,10 @@ class CarCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      elevation: 4,                           // Subtle shadow effect around the card
+      elevation: 2,
       clipBehavior: Clip.antiAlias,           // Clips child content (image) to match rounded borders
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12), // Smooth 12px rounded corners
+        borderRadius: BorderRadius.circular(16), // Smooth rounded corners
       ),
       child: InkWell(
         // Handles touch tap events to navigate to the product detail page via go_router

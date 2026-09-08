@@ -86,29 +86,38 @@ class _ShopAppState extends State<ShopApp> {
       // Global ThemeData for Light Mode - applies consistent colors across all screens
       theme: ThemeData(
         brightness: Brightness.light,
-        primarySwatch: Colors.red,
         colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.red,
+          seedColor: const Color(0xFFE4572E),
           brightness: Brightness.light,
         ),
+        scaffoldBackgroundColor: const Color(0xFFF7F3EE),
         useMaterial3: true,
         appBarTheme: const AppBarTheme(
-          centerTitle: true,
+          backgroundColor: Color(0xFFF7F3EE),
+          foregroundColor: Color(0xFF202124),
+          centerTitle: false,
           elevation: 0,
+        ),
+        cardTheme: CardThemeData(
+          color: Colors.white,
+          elevation: 2,
+          shadowColor: Color(0x33202124),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.all(Radius.circular(16)),
+          ),
         ),
       ),
       
       // Global ThemeData for Dark Mode - automatically used when _themeMode is dark
       darkTheme: ThemeData(
         brightness: Brightness.dark,
-        primarySwatch: Colors.red,
         colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.red,
+          seedColor: const Color(0xFFFF7652),
           brightness: Brightness.dark,
         ),
         useMaterial3: true,
         appBarTheme: const AppBarTheme(
-          centerTitle: true,
+          centerTitle: false,
           elevation: 0,
         ),
       ),

@@ -3,10 +3,12 @@ import '../theme/app_theme.dart';
 
 class PokedexHeader extends StatelessWidget {
   final int count;
+  final int totalAvailable;
 
   const PokedexHeader({
     super.key,
     required this.count,
+    this.totalAvailable = 30,
   });
 
   @override
@@ -28,8 +30,8 @@ class PokedexHeader extends StatelessWidget {
         child: Row(
           children: [
             Container(
-              width: 50,
-              height: 50,
+              width: 48,
+              height: 48,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: Colors.white,
@@ -72,18 +74,18 @@ class PokedexHeader extends StatelessWidget {
                   'POKÉDEX',
                   style: TextStyle(
                     color: Colors.white,
-                    fontSize: 20,
+                    fontSize: 18,
                     fontWeight: FontWeight.w900,
                     letterSpacing: 2.0,
                   ),
                 ),
                 Text(
-                  'FIRE RED • $count POKÉMON',
+                  'SHOWING $count OF $totalAvailable',
                   style: TextStyle(
                     color: Colors.white.withValues(alpha: 0.85),
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: 1.0,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.8,
                   ),
                 ),
               ],
@@ -96,8 +98,8 @@ class PokedexHeader extends StatelessWidget {
 
   Widget _buildIndicatorLed(Color color) {
     return Container(
-      width: 14,
-      height: 14,
+      width: 12,
+      height: 12,
       decoration: BoxDecoration(
         color: color,
         shape: BoxShape.circle,

@@ -9,33 +9,37 @@ class PokemonService {
 
   static const String _baseUrl = 'https://pokeapi.co/api/v2/pokemon';
 
-  Future<List<Pokemon>> fetchPokemonList({int limit = 30}) async {
-    final uri = Uri.parse('$_baseUrl?limit=$limit');
+  static const Map<String, String> _headers = {
+    'User-Agent': 'PokedexApp/1.0.0',
+    'Accept': 'application/json',
+  };
+
+  Future<Pokemon> fetchPokemonDetail(int id) async {
+    final uri = Uri.parse('$_baseUrl/$id');
 
     try {
-      final response = await _client.get(
-        uri,
-        headers: {
-          'User-Agent': 'PokedexApp/1.0.0',
-          'Accept': 'application/json',
-        },
-      );
+      final response = await _client.get(uri, headers: _headers);
 
       if (response.statusCode == 200) {
         final Map<String, dynamic> data = jsonDecode(response.body);
-        final List<dynamic> results = data['results'] as List<dynamic>? ?? [];
-
-        return results
-            .map((item) => Pokemon.fromJson(item as Map<String, dynamic>))
-            .toList();
+        return Pokemon.fromDetailJson(data);
       } else {
         throw Exception(
-          'Failed to load Pokémon from PokéAPI (status code: ${response.statusCode})',
+          'Failed to load Pokémon #$id (status code: ${response.statusCode})',
         );
       }
     } catch (e) {
       if (e is Exception) rethrow;
-      throw Exception('An unexpected network error occurred: $e');
+      throw Exception('Network error while retrieving Pokémon #$id: $e');
     }
+  }
+
+  Future<List<Pokemon>> fetchPokemonList({int limit = 30}) async {
+    final futures = List.generate(
+      limit,
+      (index) => fetchPokemonDetail(index + 1),
+    );
+
+    return await Future.wait(futures);
   }
 }

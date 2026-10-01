@@ -12,7 +12,43 @@ class AppTheme {
   static const Color sensorGreen = Color(0xFF00E676);
 
   static const Color pokedexDark = Color(0xFF212124);
-  static const Color pokedexScreenBg = Color(0xFFF4F6F9);
+  static const Color pokedexScreenFrame = Color(0xFF2D2E33);
+  static const Color pokedexScreenBg = Color(0xFF1E2024);
+
+  static const LinearGradient fireRedBackgroundGradient = LinearGradient(
+    begin: Alignment.topCenter,
+    end: Alignment.bottomCenter,
+    colors: [
+      Color(0xFFD32F2F),
+      Color(0xFFB71C1C),
+      Color(0xFF7F0000),
+    ],
+  );
+
+  static const Map<String, Color> typeColors = {
+    'fire': Color(0xFFFF5722),
+    'water': Color(0xFF2196F3),
+    'grass': Color(0xFF4CAF50),
+    'electric': Color(0xFFFFB300),
+    'psychic': Color(0xFFE91E63),
+    'ice': Color(0xFF00BCD4),
+    'dragon': Color(0xFF3F51B5),
+    'dark': Color(0xFF424242),
+    'fairy': Color(0xFFF48FB1),
+    'normal': Color(0xFF9E9E9E),
+    'fighting': Color(0xFFC62828),
+    'flying': Color(0xFF0288D1),
+    'poison': Color(0xFF9C27B0),
+    'ground': Color(0xFF795548),
+    'rock': Color(0xFF6D4C41),
+    'bug': Color(0xFF8BC34A),
+    'ghost': Color(0xFF5E35B1),
+    'steel': Color(0xFF607D8B),
+  };
+
+  static Color getTypeColor(String type) {
+    return typeColors[type.toLowerCase()] ?? const Color(0xFF78909C);
+  }
 
   static ThemeData get fireRedTheme {
     final colorScheme = ColorScheme.fromSeed(
@@ -26,7 +62,7 @@ class AppTheme {
     return ThemeData(
       useMaterial3: true,
       colorScheme: colorScheme,
-      scaffoldBackgroundColor: pokedexScreenBg,
+      scaffoldBackgroundColor: fireRedDark,
       appBarTheme: const AppBarTheme(
         backgroundColor: fireRedPrimary,
         foregroundColor: Colors.white,
@@ -40,13 +76,13 @@ class AppTheme {
         ),
       ),
       cardTheme: CardThemeData(
-        elevation: 2,
+        elevation: 3,
         color: Colors.white,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
           side: const BorderSide(
-            color: Color(0xFFE8EAF0),
-            width: 1.5,
+            color: Color(0xFFE0E0E0),
+            width: 1.2,
           ),
         ),
       ),

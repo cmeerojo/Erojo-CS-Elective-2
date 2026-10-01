@@ -26,7 +26,7 @@ class PokemonCard extends StatelessWidget {
             ),
           ),
           Padding(
-            padding: const EdgeInsets.all(12.0),
+            padding: const EdgeInsets.all(10.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
@@ -47,7 +47,7 @@ class PokemonCard extends StatelessWidget {
                         style: const TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.w800,
-                          fontSize: 12,
+                          fontSize: 11,
                           letterSpacing: 0.5,
                         ),
                       ),
@@ -59,7 +59,7 @@ class PokemonCard extends StatelessWidget {
                     ),
                   ],
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 6),
                 Expanded(
                   child: Center(
                     child: Image.network(
@@ -69,8 +69,8 @@ class PokemonCard extends StatelessWidget {
                         if (loadingProgress == null) return child;
                         return const Center(
                           child: SizedBox(
-                            width: 24,
-                            height: 24,
+                            width: 22,
+                            height: 22,
                             child: CircularProgressIndicator(
                               strokeWidth: 2,
                               color: AppTheme.fireRedPrimary,
@@ -82,7 +82,7 @@ class PokemonCard extends StatelessWidget {
                         return Center(
                           child: Icon(
                             Icons.broken_image_outlined,
-                            size: 44,
+                            size: 40,
                             color: Colors.grey.shade400,
                           ),
                         );
@@ -90,18 +90,48 @@ class PokemonCard extends StatelessWidget {
                     ),
                   ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 6),
                 Text(
                   pokemon.capitalizedName,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w700,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w800,
                     color: AppTheme.pokedexDark,
                     letterSpacing: 0.3,
                   ),
                 ),
+                if (pokemon.types.isNotEmpty) ...[
+                  const SizedBox(height: 6),
+                  Wrap(
+                    alignment: WrapAlignment.center,
+                    spacing: 4,
+                    runSpacing: 2,
+                    children: pokemon.types.map((type) {
+                      final color = AppTheme.getTypeColor(type);
+                      return Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: color,
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          type.toUpperCase(),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 9,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ],
               ],
             ),
           ),

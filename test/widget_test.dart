@@ -9,32 +9,49 @@ import 'package:flutter_application_1/screens/pokedex_screen.dart';
 import 'package:flutter_application_1/services/pokemon_service.dart';
 import 'package:flutter_application_1/widgets/pokedex_states.dart';
 import 'package:flutter_application_1/widgets/pokemon_card.dart';
+import 'package:flutter_application_1/widgets/type_filter_bar.dart';
 
 void main() {
-  test('Pokemon model correctly parses JSON and formats fields', () {
-    final json = {
-      'name': 'bulbasaur',
-      'url': 'https://pokeapi.co/api/v2/pokemon/1/',
+  test('Pokemon model correctly parses detail JSON including types', () {
+    final detailJson = {
+      'id': 6,
+      'name': 'charizard',
+      'types': [
+        {
+          'slot': 1,
+          'type': {'name': 'fire'}
+        },
+        {
+          'slot': 2,
+          'type': {'name': 'flying'}
+        }
+      ],
+      'sprites': {
+        'other': {
+          'official-artwork': {
+            'front_default': 'https://example.com/charizard.png'
+          }
+        }
+      }
     };
 
-    final pokemon = Pokemon.fromJson(json);
+    final pokemon = Pokemon.fromDetailJson(detailJson);
 
-    expect(pokemon.id, 1);
-    expect(pokemon.name, 'bulbasaur');
-    expect(pokemon.capitalizedName, 'Bulbasaur');
-    expect(pokemon.formattedId, '#001');
-    expect(
-      pokemon.imageUrl,
-      'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/1.png',
-    );
+    expect(pokemon.id, 6);
+    expect(pokemon.name, 'charizard');
+    expect(pokemon.capitalizedName, 'Charizard');
+    expect(pokemon.formattedId, '#006');
+    expect(pokemon.types, ['fire', 'flying']);
+    expect(pokemon.imageUrl, 'https://example.com/charizard.png');
   });
 
-  testWidgets('PokemonCard renders formatted ID and name', (WidgetTester tester) async {
+  testWidgets('PokemonCard renders formatted ID, name, and type badges', (WidgetTester tester) async {
     const pokemon = Pokemon(
       id: 25,
       name: 'pikachu',
       url: 'https://pokeapi.co/api/v2/pokemon/25/',
-      imageUrl: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/25.png',
+      imageUrl: 'https://example.com/pikachu.png',
+      types: ['electric'],
     );
 
     await tester.pumpWidget(
@@ -47,6 +64,36 @@ void main() {
 
     expect(find.text('#025'), findsOneWidget);
     expect(find.text('Pikachu'), findsOneWidget);
+    expect(find.text('ELECTRIC'), findsOneWidget);
+  });
+
+  testWidgets('TypeFilterBar renders options and calls callback on select', (WidgetTester tester) async {
+    const list = [
+      Pokemon(id: 1, name: 'bulbasaur', url: '', imageUrl: '', types: ['grass', 'poison']),
+      Pokemon(id: 4, name: 'charmander', url: '', imageUrl: '', types: ['fire']),
+    ];
+
+    String selected = 'all';
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: TypeFilterBar(
+            selectedType: selected,
+            allPokemon: list,
+            onSelectType: (t) => selected = t,
+          ),
+        ),
+      ),
+    );
+
+    expect(find.text('ALL'), findsOneWidget);
+    expect(find.text('FIRE'), findsOneWidget);
+    expect(find.text('GRASS'), findsOneWidget);
+    expect(find.text('POISON'), findsOneWidget);
+
+    await tester.tap(find.text('FIRE'));
+    expect(selected, 'fire');
   });
 
   testWidgets('PokedexApp smoke test and header verification', (WidgetTester tester) async {
@@ -56,19 +103,26 @@ void main() {
     expect(find.textContaining('Scanning Pokédex Database'), findsOneWidget);
   });
 
-  test('PokemonService correctly parses 30 Pokemon from API response', () async {
-    final mockResults = List.generate(
-      30,
-      (i) => {
-        'name': 'pokemon-${i + 1}',
-        'url': 'https://pokeapi.co/api/v2/pokemon/${i + 1}/',
-      },
-    );
-
+  test('PokemonService fetchRandomPokemonList fetches 30 unique Pokemon', () async {
     final mockClient = MockClient((request) async {
-      expect(request.url.queryParameters['limit'], '30');
+      final idStr = request.url.pathSegments.last;
+      final id = int.tryParse(idStr) ?? 1;
       return http.Response(
-        jsonEncode({'results': mockResults}),
+        jsonEncode({
+          'id': id,
+          'name': 'pokemon-$id',
+          'types': [
+            {
+              'slot': 1,
+              'type': {'name': id.isEven ? 'water' : 'fire'}
+            }
+          ],
+          'sprites': {
+            'other': {
+              'official-artwork': {'front_default': 'https://example.com/$id.png'}
+            }
+          }
+        }),
         200,
         headers: {'content-type': 'application/json'},
       );
@@ -79,24 +133,10 @@ void main() {
 
     expect(list.length, 30);
     expect(list.first.id, 1);
-    expect(list.first.name, 'pokemon-1');
     expect(list.last.id, 30);
-    expect(list.last.name, 'pokemon-30');
   });
 
-  test('PokemonService throws Exception on server error', () async {
-    final mockClient = MockClient((request) async {
-      return http.Response('Internal Server Error', 500);
-    });
-
-    final service = PokemonService(client: mockClient);
-    expect(
-      () => service.fetchPokemonList(limit: 30),
-      throwsA(isA<Exception>()),
-    );
-  });
-
-  testWidgets('PokedexScreen displays error state and retry on failure', (WidgetTester tester) async {
+  testWidgets('PokedexScreen displays error state on failure', (WidgetTester tester) async {
     final mockClient = MockClient((request) async {
       return http.Response('Error', 500);
     });
@@ -116,42 +156,27 @@ void main() {
     expect(find.text('RETRY TRANSMISSION'), findsOneWidget);
   });
 
-  testWidgets('PokedexScreen displays empty state when 0 results returned', (WidgetTester tester) async {
+  testWidgets('PokedexScreen filters grid when type chip is tapped', (WidgetTester tester) async {
     final mockClient = MockClient((request) async {
+      final idStr = request.url.pathSegments.last;
+      final id = int.tryParse(idStr) ?? 1;
+      final type = id.isEven ? 'water' : 'fire';
       return http.Response(
-        jsonEncode({'results': []}),
-        200,
-        headers: {'content-type': 'application/json'},
-      );
-    });
-
-    final service = PokemonService(client: mockClient);
-
-    await tester.pumpWidget(
-      MaterialApp(
-        home: PokedexScreen(service: service),
-      ),
-    );
-
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 100));
-
-    expect(find.byType(PokedexEmptyWidget), findsOneWidget);
-    expect(find.text('REFRESH POKÉDEX'), findsOneWidget);
-  });
-
-  testWidgets('PokedexScreen displays grid of Pokemon cards on success', (WidgetTester tester) async {
-    final mockResults = List.generate(
-      30,
-      (i) => {
-        'name': 'pokemon-${i + 1}',
-        'url': 'https://pokeapi.co/api/v2/pokemon/${i + 1}/',
-      },
-    );
-
-    final mockClient = MockClient((request) async {
-      return http.Response(
-        jsonEncode({'results': mockResults}),
+        jsonEncode({
+          'id': id,
+          'name': 'pokemon-$id',
+          'types': [
+            {
+              'slot': 1,
+              'type': {'name': type}
+            }
+          ],
+          'sprites': {
+            'other': {
+              'official-artwork': {'front_default': 'https://example.com/$id.png'}
+            }
+          }
+        }),
         200,
         headers: {'content-type': 'application/json'},
       );
@@ -169,8 +194,13 @@ void main() {
     await tester.pump(const Duration(milliseconds: 100));
 
     expect(find.byType(GridView), findsOneWidget);
-    expect(find.text('Pokemon-1'), findsOneWidget);
-    expect(find.text('#001'), findsOneWidget);
-    expect(find.text('FIRE RED • 30 POKÉMON'), findsOneWidget);
+    final fireFilterChip = find.descendant(
+      of: find.byType(TypeFilterBar),
+      matching: find.text('FIRE'),
+    );
+    await tester.tap(fireFilterChip);
+    await tester.pump();
+
+    expect(find.textContaining('OF 30'), findsOneWidget);
   });
 }

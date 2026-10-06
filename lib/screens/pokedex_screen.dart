@@ -41,6 +41,9 @@ class _PokedexScreenState extends State<PokedexScreen> {
             PokedexHeader(
               count: filteredPokemon.length,
               totalAvailable: allPokemon.length,
+              onRefresh: () {
+                context.read<PokemonProvider>().refreshPokemon(limit: 30);
+              },
             ),
             if (provider.isSuccess && allPokemon.isNotEmpty)
               TypeFilterBar(
@@ -83,7 +86,8 @@ class _PokedexScreenState extends State<PokedexScreen> {
 
     if (allPokemon.isEmpty) {
       return PokedexEmptyWidget(
-        onRefresh: () => context.read<PokemonProvider>().fetchPokemon(limit: 30),
+        onRefresh: () =>
+            context.read<PokemonProvider>().fetchPokemon(limit: 30),
       );
     }
 
@@ -113,10 +117,7 @@ class _PokedexScreenState extends State<PokedexScreen> {
               const Text(
                 'None of the first 30 Pokémon match this type filter.',
                 textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: Colors.white60,
-                  fontSize: 12,
-                ),
+                style: TextStyle(color: Colors.white60, fontSize: 12),
               ),
               const SizedBox(height: 16),
               ElevatedButton(
@@ -132,7 +133,8 @@ class _PokedexScreenState extends State<PokedexScreen> {
     }
 
     return RefreshIndicator(
-      onRefresh: () => context.read<PokemonProvider>().refreshPokemon(limit: 30),
+      onRefresh: () =>
+          context.read<PokemonProvider>().refreshPokemon(limit: 30),
       color: Theme.of(context).primaryColor,
       child: LayoutBuilder(
         builder: (context, constraints) {

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../models/pokemon.dart';
 import '../providers/pokemon_provider.dart';
 import '../theme/app_theme.dart';
 import '../widgets/pokedex_background.dart';
@@ -38,6 +39,10 @@ class PokemonDetailScreen extends StatelessWidget {
                               letterSpacing: 1.5,
                             ),
                           ),
+                          const SizedBox(height: 10),
+                          _buildTypeBadges(pokemon.types),
+                          const SizedBox(height: 20),
+                          _buildDataEntryCard(pokemon),
                         ],
                       ),
                     ),
@@ -141,6 +146,17 @@ class PokemonDetailScreen extends StatelessWidget {
                 letterSpacing: 1.5,
               ),
             ),
+            IconButton(
+              icon: const Icon(
+                Icons.refresh_rounded,
+                color: Colors.white,
+                size: 22,
+              ),
+              tooltip: 'Refresh Pokédex',
+              onPressed: () {
+                context.read<PokemonProvider>().refreshPokemon(limit: 30);
+              },
+            ),
           ],
         ),
       ),
@@ -211,6 +227,146 @@ class PokemonDetailScreen extends StatelessWidget {
                   ),
                 );
               },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTypeBadges(List<String> types) {
+    return Wrap(
+      alignment: WrapAlignment.center,
+      spacing: 8,
+      children: types.map((type) {
+        final color = AppTheme.getTypeColor(type);
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: color.withValues(alpha: 0.4),
+                blurRadius: 6,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Text(
+            type.toUpperCase(),
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 12,
+              fontWeight: FontWeight.w900,
+              letterSpacing: 1.0,
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  Widget _buildDataEntryCard(Pokemon pokemon) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE0E0E0), width: 1.5),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.15),
+            blurRadius: 8,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Row(
+            children: [
+              Icon(
+                Icons.menu_book_rounded,
+                color: AppTheme.fireRedPrimary,
+                size: 20,
+              ),
+              SizedBox(width: 8),
+              Text(
+                'POKÉDEX ENTRY DATA',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w900,
+                  color: AppTheme.pokedexDark,
+                  letterSpacing: 1.0,
+                ),
+              ),
+            ],
+          ),
+          const Divider(height: 20, thickness: 1),
+          _buildInfoRow('National Pokédex ID', pokemon.formattedId),
+          _buildInfoRow('Species Name', pokemon.capitalizedName),
+          _buildInfoRow(
+            'Primary Type',
+            pokemon.types.isNotEmpty ? pokemon.types.first.toUpperCase() : 'UNKNOWN',
+          ),
+          if (pokemon.types.length > 1)
+            _buildInfoRow('Secondary Type', pokemon.types[1].toUpperCase()),
+          const SizedBox(height: 8),
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: AppTheme.fireRedPrimary.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: const Row(
+              children: [
+                Icon(
+                  Icons.check_circle_outline,
+                  color: AppTheme.fireRedPrimary,
+                  size: 18,
+                ),
+                SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Entry synced from Oak\'s Pokédex Database (PokéAPI).',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: AppTheme.fireRedDark,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInfoRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 13,
+              color: Colors.grey.shade700,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          Text(
+            value,
+            style: const TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w800,
+              color: AppTheme.pokedexDark,
             ),
           ),
         ],

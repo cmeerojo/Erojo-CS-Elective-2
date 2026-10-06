@@ -4,10 +4,12 @@ import '../theme/app_theme.dart';
 class PokedexHeader extends StatelessWidget {
   final int count;
   final int totalAvailable;
+  final VoidCallback onRefresh;
 
   const PokedexHeader({
     super.key,
     required this.count,
+    required this.onRefresh,
     this.totalAvailable = 30,
   });
 
@@ -89,6 +91,15 @@ class PokedexHeader extends StatelessWidget {
                   ),
                 ),
               ],
+            ),
+            IconButton(
+              icon: const Icon(
+                Icons.refresh_rounded,
+                color: Colors.white,
+                size: 22,
+              ),
+              tooltip: 'Refresh Pokédex',
+              onPressed: onRefresh,
             ),
           ],
         ),

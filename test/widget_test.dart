@@ -265,7 +265,9 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byType(PokemonDetailScreen), findsOneWidget);
-    expect(find.text('POKÉDEX ENTRY DATA'), findsOneWidget);
+    expect(find.text('POKÉDEX ENTRY DATA'), findsNothing);
     expect(find.text('ENTRY #001'), findsOneWidget);
+    expect(find.text('Pokemon-1'), findsOneWidget);
+    expect(find.text('FIRE'), findsNothing);
   });
 }

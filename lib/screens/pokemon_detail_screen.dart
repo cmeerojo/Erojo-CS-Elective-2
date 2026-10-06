@@ -24,7 +24,10 @@ class PokemonDetailScreen extends StatelessWidget {
                       padding: const EdgeInsets.all(16.0),
                       child: Column(
                         children: [
-                          _buildArtworkDisplay(pokemon.imageUrl, pokemon.formattedId),
+                          _buildArtworkDisplay(
+                            pokemon.imageUrl,
+                            pokemon.formattedId,
+                          ),
                           const SizedBox(height: 16),
                           Text(
                             pokemon.capitalizedName,
@@ -35,10 +38,6 @@ class PokemonDetailScreen extends StatelessWidget {
                               letterSpacing: 1.5,
                             ),
                           ),
-                          const SizedBox(height: 10),
-                          _buildTypeBadges(pokemon.types),
-                          const SizedBox(height: 20),
-                          _buildDataEntryCard(pokemon),
                         ],
                       ),
                     ),
@@ -54,11 +53,7 @@ class PokemonDetailScreen extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(
-            Icons.catching_pokemon,
-            size: 64,
-            color: Colors.white38,
-          ),
+          const Icon(Icons.catching_pokemon, size: 64, color: Colors.white38),
           const SizedBox(height: 16),
           const Text(
             'No Pokémon Selected',
@@ -84,11 +79,7 @@ class PokemonDetailScreen extends StatelessWidget {
       decoration: const BoxDecoration(
         color: AppTheme.fireRedPrimary,
         boxShadow: [
-          BoxShadow(
-            color: Colors.black26,
-            offset: Offset(0, 3),
-            blurRadius: 6,
-          ),
+          BoxShadow(color: Colors.black26, offset: Offset(0, 3), blurRadius: 6),
         ],
       ),
       child: SafeArea(
@@ -96,7 +87,11 @@ class PokemonDetailScreen extends StatelessWidget {
         child: Row(
           children: [
             IconButton(
-              icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 20),
+              icon: const Icon(
+                Icons.arrow_back_ios_new_rounded,
+                color: Colors.white,
+                size: 20,
+              ),
               tooltip: 'Back to Pokédex',
               onPressed: () => Navigator.of(context).pop(),
             ),
@@ -174,11 +169,6 @@ class PokemonDetailScreen extends StatelessWidget {
       child: Stack(
         alignment: Alignment.center,
         children: [
-          Icon(
-            Icons.catching_pokemon,
-            size: 190,
-            color: Colors.white.withValues(alpha: 0.05),
-          ),
           Positioned(
             top: 12,
             left: 14,
@@ -221,138 +211,6 @@ class PokemonDetailScreen extends StatelessWidget {
                   ),
                 );
               },
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTypeBadges(List<String> types) {
-    return Wrap(
-      alignment: WrapAlignment.center,
-      spacing: 8,
-      children: types.map((type) {
-        final color = AppTheme.getTypeColor(type);
-        return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-          decoration: BoxDecoration(
-            color: color,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: color.withValues(alpha: 0.4),
-                blurRadius: 6,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          child: Text(
-            type.toUpperCase(),
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 12,
-              fontWeight: FontWeight.w900,
-              letterSpacing: 1.0,
-            ),
-          ),
-        );
-      }).toList(),
-    );
-  }
-
-  Widget _buildDataEntryCard(dynamic pokemon) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE0E0E0), width: 1.5),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.15),
-            blurRadius: 8,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Row(
-            children: [
-              Icon(Icons.menu_book_rounded, color: AppTheme.fireRedPrimary, size: 20),
-              SizedBox(width: 8),
-              Text(
-                'POKÉDEX ENTRY DATA',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w900,
-                  color: AppTheme.pokedexDark,
-                  letterSpacing: 1.0,
-                ),
-              ),
-            ],
-          ),
-          const Divider(height: 20, thickness: 1),
-          _buildInfoRow('National Pokédex ID', pokemon.formattedId),
-          _buildInfoRow('Species Name', pokemon.capitalizedName),
-          _buildInfoRow(
-            'Primary Type',
-            pokemon.types.isNotEmpty ? (pokemon.types.first as String).toUpperCase() : 'UNKNOWN',
-          ),
-          if (pokemon.types.length > 1)
-            _buildInfoRow('Secondary Type', (pokemon.types[1] as String).toUpperCase()),
-          const SizedBox(height: 8),
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: AppTheme.fireRedPrimary.withValues(alpha: 0.08),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: const Row(
-              children: [
-                Icon(Icons.check_circle_outline, color: AppTheme.fireRedPrimary, size: 18),
-                SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    'Entry synced from Oak\'s Pokédex Database (PokéAPI).',
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                      color: AppTheme.fireRedDark,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildInfoRow(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 13,
-              color: Colors.grey.shade700,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          Text(
-            value,
-            style: const TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w800,
-              color: AppTheme.pokedexDark,
             ),
           ),
         ],

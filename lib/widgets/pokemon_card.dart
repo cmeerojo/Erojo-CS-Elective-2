@@ -22,15 +22,6 @@ class PokemonCard extends StatelessWidget {
         highlightColor: AppTheme.fireRedPrimary.withValues(alpha: 0.1),
         child: Stack(
           children: [
-            Positioned(
-              right: -24,
-              bottom: -24,
-              child: Icon(
-                Icons.catching_pokemon,
-                size: 110,
-                color: Colors.black.withValues(alpha: 0.04),
-              ),
-            ),
             Padding(
               padding: const EdgeInsets.all(10.0),
               child: Column(
@@ -57,11 +48,6 @@ class PokemonCard extends StatelessWidget {
                             letterSpacing: 0.5,
                           ),
                         ),
-                      ),
-                      const Icon(
-                        Icons.catching_pokemon,
-                        size: 16,
-                        color: AppTheme.fireRedFlame,
                       ),
                     ],
                   ),
@@ -108,36 +94,6 @@ class PokemonCard extends StatelessWidget {
                       letterSpacing: 0.3,
                     ),
                   ),
-                  if (pokemon.types.isNotEmpty) ...[
-                    const SizedBox(height: 6),
-                    Wrap(
-                      alignment: WrapAlignment.center,
-                      spacing: 4,
-                      runSpacing: 2,
-                      children: pokemon.types.map((type) {
-                        final color = AppTheme.getTypeColor(type);
-                        return Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 6,
-                            vertical: 2,
-                          ),
-                          decoration: BoxDecoration(
-                            color: color,
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: Text(
-                            type.toUpperCase(),
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 9,
-                              fontWeight: FontWeight.w900,
-                              letterSpacing: 0.5,
-                            ),
-                          ),
-                        );
-                      }).toList(),
-                    ),
-                  ],
                 ],
               ),
             ),

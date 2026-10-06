@@ -1,105 +1,89 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../models/pokemon.dart';
-import '../services/pokemon_service.dart';
+import '../providers/pokemon_provider.dart';
 import '../widgets/pokedex_background.dart';
 import '../widgets/pokedex_header.dart';
 import '../widgets/pokedex_states.dart';
 import '../widgets/pokemon_card.dart';
 import '../widgets/type_filter_bar.dart';
+import 'pokemon_detail_screen.dart';
 
 class PokedexScreen extends StatefulWidget {
-  final PokemonService? service;
-
-  const PokedexScreen({super.key, this.service});
+  const PokedexScreen({super.key});
 
   @override
   State<PokedexScreen> createState() => _PokedexScreenState();
 }
 
 class _PokedexScreenState extends State<PokedexScreen> {
-  late final PokemonService _pokemonService;
-  late Future<List<Pokemon>> _pokemonListFuture;
-  String _selectedType = 'all';
-
   @override
   void initState() {
     super.initState();
-    _pokemonService = widget.service ?? PokemonService();
-    _loadPokemon();
-  }
-
-  void _loadPokemon() {
-    setState(() {
-      _selectedType = 'all';
-      _pokemonListFuture = _pokemonService.fetchPokemonList(limit: 30);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final provider = context.read<PokemonProvider>();
+      if (provider.status == PokemonStatus.initial) {
+        provider.fetchPokemon(limit: 30);
+      }
     });
   }
 
   @override
   Widget build(BuildContext context) {
+    final provider = context.watch<PokemonProvider>();
+    final allPokemon = provider.pokemonList;
+    final filteredPokemon = provider.filteredPokemon;
+
     return Scaffold(
       body: PokedexBackground(
-        child: FutureBuilder<List<Pokemon>>(
-          future: _pokemonListFuture,
-          builder: (context, snapshot) {
-            final allPokemon = snapshot.data ?? [];
-
-            final filteredPokemon = _selectedType == 'all'
-                ? allPokemon
-                : allPokemon
-                    .where((p) => p.types.contains(_selectedType.toLowerCase()))
-                    .toList();
-
-            return Column(
-              children: [
-                PokedexHeader(
-                  count: filteredPokemon.length,
-                  totalAvailable: allPokemon.length,
-                ),
-                if (snapshot.hasData && allPokemon.isNotEmpty)
-                  TypeFilterBar(
-                    selectedType: _selectedType,
-                    allPokemon: allPokemon,
-                    onSelectType: (type) {
-                      setState(() {
-                        _selectedType = type;
-                      });
-                    },
-                  ),
-                Expanded(
-                  child: _buildBody(
-                    snapshot: snapshot,
-                    filteredPokemon: filteredPokemon,
-                  ),
-                ),
-              ],
-            );
-          },
+        child: Column(
+          children: [
+            PokedexHeader(
+              count: filteredPokemon.length,
+              totalAvailable: allPokemon.length,
+            ),
+            if (provider.isSuccess && allPokemon.isNotEmpty)
+              TypeFilterBar(
+                selectedType: provider.selectedType,
+                allPokemon: allPokemon,
+                onSelectType: (type) {
+                  context.read<PokemonProvider>().selectType(type);
+                },
+              ),
+            Expanded(
+              child: _buildBody(
+                context: context,
+                provider: provider,
+                filteredPokemon: filteredPokemon,
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
 
   Widget _buildBody({
-    required AsyncSnapshot<List<Pokemon>> snapshot,
+    required BuildContext context,
+    required PokemonProvider provider,
     required List<Pokemon> filteredPokemon,
   }) {
-    if (snapshot.connectionState == ConnectionState.waiting) {
+    if (provider.isLoading) {
       return const PokedexLoadingWidget();
     }
 
-    if (snapshot.hasError) {
+    if (provider.isError) {
       return PokedexErrorWidget(
-        errorMessage: snapshot.error.toString(),
-        onRetry: _loadPokemon,
+        errorMessage: provider.errorMessage ?? 'An error occurred',
+        onRetry: () => context.read<PokemonProvider>().fetchPokemon(limit: 30),
       );
     }
 
-    final allPokemon = snapshot.data ?? [];
+    final allPokemon = provider.pokemonList;
 
     if (allPokemon.isEmpty) {
       return PokedexEmptyWidget(
-        onRefresh: _loadPokemon,
+        onRefresh: () => context.read<PokemonProvider>().fetchPokemon(limit: 30),
       );
     }
 
@@ -117,7 +101,7 @@ class _PokedexScreenState extends State<PokedexScreen> {
               ),
               const SizedBox(height: 12),
               Text(
-                'No ${_selectedType.toUpperCase()} Pokémon In The First 30',
+                'No ${provider.selectedType.toUpperCase()} Pokémon In The First 30',
                 textAlign: TextAlign.center,
                 style: const TextStyle(
                   color: Colors.white,
@@ -137,9 +121,7 @@ class _PokedexScreenState extends State<PokedexScreen> {
               const SizedBox(height: 16),
               ElevatedButton(
                 onPressed: () {
-                  setState(() {
-                    _selectedType = 'all';
-                  });
+                  context.read<PokemonProvider>().selectType('all');
                 },
                 child: const Text('SHOW ALL POKÉMON'),
               ),
@@ -150,7 +132,7 @@ class _PokedexScreenState extends State<PokedexScreen> {
     }
 
     return RefreshIndicator(
-      onRefresh: () async => _loadPokemon(),
+      onRefresh: () => context.read<PokemonProvider>().refreshPokemon(limit: 30),
       color: Theme.of(context).primaryColor,
       child: LayoutBuilder(
         builder: (context, constraints) {
@@ -169,7 +151,18 @@ class _PokedexScreenState extends State<PokedexScreen> {
             ),
             itemCount: filteredPokemon.length,
             itemBuilder: (context, index) {
-              return PokemonCard(pokemon: filteredPokemon[index]);
+              final pokemon = filteredPokemon[index];
+              return PokemonCard(
+                pokemon: pokemon,
+                onTap: () {
+                  context.read<PokemonProvider>().selectPokemon(pokemon);
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => const PokemonDetailScreen(),
+                    ),
+                  );
+                },
+              );
             },
           );
         },

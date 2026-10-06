@@ -1,9 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'providers/pokemon_provider.dart';
 import 'screens/pokedex_screen.dart';
 import 'theme/app_theme.dart';
 
 void main() {
-  runApp(const PokedexApp());
+  runApp(
+    ChangeNotifierProvider(
+      create: (_) => PokemonProvider(),
+      child: const PokedexApp(),
+    ),
+  );
 }
 
 class PokedexApp extends StatelessWidget {

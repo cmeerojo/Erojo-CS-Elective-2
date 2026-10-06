@@ -1,11 +1,15 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
+import 'package:provider/provider.dart';
 import 'package:flutter_application_1/main.dart';
 import 'package:flutter_application_1/models/pokemon.dart';
+import 'package:flutter_application_1/providers/pokemon_provider.dart';
 import 'package:flutter_application_1/screens/pokedex_screen.dart';
+import 'package:flutter_application_1/screens/pokemon_detail_screen.dart';
 import 'package:flutter_application_1/services/pokemon_service.dart';
 import 'package:flutter_application_1/widgets/pokedex_states.dart';
 import 'package:flutter_application_1/widgets/pokemon_card.dart';
@@ -97,13 +101,25 @@ void main() {
   });
 
   testWidgets('PokedexApp smoke test and header verification', (WidgetTester tester) async {
-    await tester.pumpWidget(const PokedexApp());
+    final pendingClient = MockClient(
+      (_) => Completer<http.Response>().future,
+    );
+
+    await tester.pumpWidget(
+      ChangeNotifierProvider<PokemonProvider>(
+        create: (_) => PokemonProvider(
+          service: PokemonService(client: pendingClient),
+        ),
+        child: const PokedexApp(),
+      ),
+    );
+    await tester.pump();
 
     expect(find.text('POKÉDEX'), findsOneWidget);
     expect(find.textContaining('Scanning Pokédex Database'), findsOneWidget);
   });
 
-  test('PokemonService fetchRandomPokemonList fetches 30 unique Pokemon', () async {
+  test('PokemonProvider manages loading, success, and filtering states', () async {
     final mockClient = MockClient((request) async {
       final idStr = request.url.pathSegments.last;
       final id = int.tryParse(idStr) ?? 1;
@@ -129,11 +145,24 @@ void main() {
     });
 
     final service = PokemonService(client: mockClient);
-    final list = await service.fetchPokemonList(limit: 30);
+    final provider = PokemonProvider(service: service);
 
-    expect(list.length, 30);
-    expect(list.first.id, 1);
-    expect(list.last.id, 30);
+    expect(provider.status, PokemonStatus.initial);
+    expect(provider.pokemonList.isEmpty, isTrue);
+
+    await provider.fetchPokemon(limit: 30);
+
+    expect(provider.status, PokemonStatus.success);
+    expect(provider.pokemonList.length, 30);
+    expect(provider.filteredPokemon.length, 30);
+
+    provider.selectType('fire');
+    expect(provider.selectedType, 'fire');
+    expect(provider.filteredPokemon.length, 15);
+
+    final selected = provider.filteredPokemon.first;
+    provider.selectPokemon(selected);
+    expect(provider.selectedPokemon, selected);
   });
 
   testWidgets('PokedexScreen displays error state on failure', (WidgetTester tester) async {
@@ -142,10 +171,14 @@ void main() {
     });
 
     final service = PokemonService(client: mockClient);
+    final provider = PokemonProvider(service: service);
 
     await tester.pumpWidget(
-      MaterialApp(
-        home: PokedexScreen(service: service),
+      ChangeNotifierProvider<PokemonProvider>.value(
+        value: provider,
+        child: const MaterialApp(
+          home: PokedexScreen(),
+        ),
       ),
     );
 
@@ -156,7 +189,7 @@ void main() {
     expect(find.text('RETRY TRANSMISSION'), findsOneWidget);
   });
 
-  testWidgets('PokedexScreen filters grid when type chip is tapped', (WidgetTester tester) async {
+  testWidgets('PokedexScreen filters grid and navigates to detail on tap', (WidgetTester tester) async {
     final mockClient = MockClient((request) async {
       final idStr = request.url.pathSegments.last;
       final id = int.tryParse(idStr) ?? 1;
@@ -183,10 +216,14 @@ void main() {
     });
 
     final service = PokemonService(client: mockClient);
+    final provider = PokemonProvider(service: service);
 
     await tester.pumpWidget(
-      MaterialApp(
-        home: PokedexScreen(service: service),
+      ChangeNotifierProvider<PokemonProvider>.value(
+        value: provider,
+        child: const MaterialApp(
+          home: PokedexScreen(),
+        ),
       ),
     );
 
@@ -202,5 +239,13 @@ void main() {
     await tester.pump();
 
     expect(find.textContaining('OF 30'), findsOneWidget);
+
+    // Tap first card to navigate to detail screen
+    await tester.tap(find.byType(PokemonCard).first);
+    await tester.pumpAndSettle();
+
+    expect(find.byType(PokemonDetailScreen), findsOneWidget);
+    expect(find.text('POKÉDEX ENTRY DATA'), findsOneWidget);
+    expect(find.text('ENTRY #001'), findsOneWidget);
   });
 }

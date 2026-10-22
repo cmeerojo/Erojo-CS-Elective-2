@@ -4,10 +4,7 @@ import '../theme/app_theme.dart';
 class PokedexBackground extends StatelessWidget {
   final Widget child;
 
-  const PokedexBackground({
-    super.key,
-    required this.child,
-  });
+  const PokedexBackground({super.key, required this.child});
 
   @override
   Widget build(BuildContext context) {

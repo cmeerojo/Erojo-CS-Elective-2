@@ -4,6 +4,7 @@ import '../theme/app_theme.dart';
 class PokedexHeader extends StatelessWidget {
   final int count;
   final int totalAvailable;
+  final int favoriteCount;
   final VoidCallback onRefresh;
 
   const PokedexHeader({
@@ -11,6 +12,7 @@ class PokedexHeader extends StatelessWidget {
     required this.count,
     required this.onRefresh,
     this.totalAvailable = 30,
+    this.favoriteCount = 0,
   });
 
   @override
@@ -20,11 +22,7 @@ class PokedexHeader extends StatelessWidget {
       decoration: const BoxDecoration(
         color: AppTheme.fireRedPrimary,
         boxShadow: [
-          BoxShadow(
-            color: Colors.black26,
-            offset: Offset(0, 3),
-            blurRadius: 6,
-          ),
+          BoxShadow(color: Colors.black26, offset: Offset(0, 3), blurRadius: 6),
         ],
       ),
       child: SafeArea(
@@ -100,6 +98,13 @@ class PokedexHeader extends StatelessWidget {
               ),
               tooltip: 'Refresh Pokédex',
               onPressed: onRefresh,
+            ),
+            Padding(
+              padding: const EdgeInsets.only(left: 4),
+              child: Text(
+                '$favoriteCount ♥',
+                style: const TextStyle(color: Colors.white, fontSize: 12),
+              ),
             ),
           ],
         ),

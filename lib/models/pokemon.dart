@@ -24,7 +24,9 @@ class Pokemon {
     final name = json['name'] as String? ?? '';
     final url = json['url'] as String? ?? '';
 
-    final uriSegments = Uri.parse(url).pathSegments.where((s) => s.isNotEmpty).toList();
+    final uriSegments = Uri.parse(
+      url,
+    ).pathSegments.where((s) => s.isNotEmpty).toList();
     final id = uriSegments.isNotEmpty ? int.tryParse(uriSegments.last) ?? 0 : 0;
 
     final imageUrl =
@@ -49,9 +51,12 @@ class Pokemon {
         .where((t) => t.isNotEmpty)
         .toList();
 
-    final artwork = json['sprites']?['other']?['official-artwork']?['front_default'] as String?;
+    final artwork =
+        json['sprites']?['other']?['official-artwork']?['front_default']
+            as String?;
     final sprite = json['sprites']?['front_default'] as String?;
-    final imageUrl = artwork ??
+    final imageUrl =
+        artwork ??
         sprite ??
         'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/$id.png';
 

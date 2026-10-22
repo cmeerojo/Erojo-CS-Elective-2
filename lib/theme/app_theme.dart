@@ -18,11 +18,7 @@ class AppTheme {
   static const LinearGradient fireRedBackgroundGradient = LinearGradient(
     begin: Alignment.topCenter,
     end: Alignment.bottomCenter,
-    colors: [
-      Color(0xFFD32F2F),
-      Color(0xFFB71C1C),
-      Color(0xFF7F0000),
-    ],
+    colors: [Color(0xFFD32F2F), Color(0xFFB71C1C), Color(0xFF7F0000)],
   );
 
   static const Map<String, Color> typeColors = {
@@ -80,10 +76,7 @@ class AppTheme {
         color: Colors.white,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
-          side: const BorderSide(
-            color: Color(0xFFE0E0E0),
-            width: 1.2,
-          ),
+          side: const BorderSide(color: Color(0xFFE0E0E0), width: 1.2),
         ),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(

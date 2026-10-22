@@ -4,11 +4,19 @@ import '../theme/app_theme.dart';
 
 class PokemonCard extends StatelessWidget {
   final Pokemon pokemon;
+  final String? nickname;
+  final bool isFavorite;
+  final VoidCallback? onToggleFavorite;
+  final VoidCallback? onEditNickname;
   final VoidCallback? onTap;
 
   const PokemonCard({
     super.key,
     required this.pokemon,
+    this.nickname,
+    this.isFavorite = false,
+    this.onToggleFavorite,
+    this.onEditNickname,
     this.onTap,
   });
 
@@ -49,6 +57,19 @@ class PokemonCard extends StatelessWidget {
                           ),
                         ),
                       ),
+                      IconButton(
+                        icon: Icon(
+                          isFavorite ? Icons.favorite : Icons.favorite_border,
+                          color: isFavorite ? Colors.red : Colors.grey,
+                        ),
+                        iconSize: 21,
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                        tooltip: isFavorite
+                            ? 'Remove from favorites'
+                            : 'Add to favorites',
+                        onPressed: onToggleFavorite,
+                      ),
                     ],
                   ),
                   const SizedBox(height: 6),
@@ -83,17 +104,43 @@ class PokemonCard extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 6),
-                  Text(
-                    pokemon.capitalizedName,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w800,
-                      color: AppTheme.pokedexDark,
-                      letterSpacing: 0.3,
-                    ),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Flexible(
+                        child: Text(
+                          pokemon.capitalizedName,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w800,
+                            color: AppTheme.pokedexDark,
+                            letterSpacing: 0.3,
+                          ),
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.edit_note_rounded),
+                        iconSize: 20,
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                        tooltip: 'Edit nickname',
+                        onPressed: onEditNickname,
+                      ),
+                    ],
                   ),
+                  if (nickname != null)
+                    Text(
+                      '“$nickname”',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: AppTheme.fireRedPrimary,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
                 ],
               ),
             ),

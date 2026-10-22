@@ -37,7 +37,9 @@ class TypeFilterBar extends StatelessWidget {
         itemBuilder: (context, index) {
           final type = filterOptions[index];
           final isSelected = selectedType.toLowerCase() == type.toLowerCase();
-          final count = type == 'all' ? allPokemon.length : (typeCounts[type] ?? 0);
+          final count = type == 'all'
+              ? allPokemon.length
+              : (typeCounts[type] ?? 0);
           final typeColor = type == 'all'
               ? AppTheme.fireRedFlame
               : AppTheme.getTypeColor(type);
@@ -52,7 +54,9 @@ class TypeFilterBar extends StatelessWidget {
                 color: isSelected ? typeColor : const Color(0xFF282A30),
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(
-                  color: isSelected ? Colors.white : typeColor.withValues(alpha: 0.6),
+                  color: isSelected
+                      ? Colors.white
+                      : typeColor.withValues(alpha: 0.6),
                   width: isSelected ? 2 : 1.2,
                 ),
                 boxShadow: isSelected
@@ -79,7 +83,10 @@ class TypeFilterBar extends StatelessWidget {
                   ),
                   const SizedBox(width: 6),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 2,
+                    ),
                     decoration: BoxDecoration(
                       color: isSelected
                           ? Colors.black.withValues(alpha: 0.25)

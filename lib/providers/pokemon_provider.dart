@@ -8,7 +8,7 @@ class PokemonProvider extends ChangeNotifier {
   final PokemonService _service;
 
   PokemonProvider({PokemonService? service})
-      : _service = service ?? PokemonService();
+    : _service = service ?? PokemonService();
 
   PokemonStatus _status = PokemonStatus.initial;
   List<Pokemon> _pokemonList = [];

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/pokemon.dart';
-import '../providers/pokemon_provider.dart';
+import '../providers/pokemon_riverpod.dart';
 import '../widgets/pokedex_background.dart';
 import '../widgets/pokedex_header.dart';
 import '../widgets/pokedex_states.dart';
@@ -9,166 +9,250 @@ import '../widgets/pokemon_card.dart';
 import '../widgets/type_filter_bar.dart';
 import 'pokemon_detail_screen.dart';
 
-class PokedexScreen extends StatefulWidget {
+class PokedexScreen extends ConsumerStatefulWidget {
   const PokedexScreen({super.key});
 
   @override
-  State<PokedexScreen> createState() => _PokedexScreenState();
+  ConsumerState<PokedexScreen> createState() => _PokedexScreenState();
 }
 
-class _PokedexScreenState extends State<PokedexScreen> {
+class _PokedexScreenState extends ConsumerState<PokedexScreen> {
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final provider = context.read<PokemonProvider>();
-      if (provider.status == PokemonStatus.initial) {
-        provider.fetchPokemon(limit: 30);
+      if (ref.read(pokemonControllerProvider).status ==
+          PokemonLoadStatus.initial) {
+        ref.read(pokemonControllerProvider.notifier).fetch();
       }
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    final provider = context.watch<PokemonProvider>();
-    final allPokemon = provider.pokemonList;
-    final filteredPokemon = provider.filteredPokemon;
+    final state = ref.watch(pokemonControllerProvider);
+    final controller = ref.read(pokemonControllerProvider.notifier);
 
     return Scaffold(
       body: PokedexBackground(
         child: Column(
           children: [
             PokedexHeader(
-              count: filteredPokemon.length,
-              totalAvailable: allPokemon.length,
-              onRefresh: () {
-                context.read<PokemonProvider>().refreshPokemon(limit: 30);
-              },
+              count: state.filteredPokemon.length,
+              totalAvailable: state.pokemon.length,
+              favoriteCount: state.favoritePokemon.length,
+              onRefresh: controller.fetch,
             ),
-            if (provider.isSuccess && allPokemon.isNotEmpty)
+            if (state.status == PokemonLoadStatus.success &&
+                state.pokemon.isNotEmpty)
               TypeFilterBar(
-                selectedType: provider.selectedType,
-                allPokemon: allPokemon,
-                onSelectType: (type) {
-                  context.read<PokemonProvider>().selectType(type);
-                },
+                selectedType: state.selectedType,
+                allPokemon: state.pokemon,
+                onSelectType: controller.selectType,
               ),
-            Expanded(
-              child: _buildBody(
-                context: context,
-                provider: provider,
-                filteredPokemon: filteredPokemon,
-              ),
+            _FavoritesPanel(
+              favorites: state.favoritePokemon,
+              nicknames: state.nicknames,
+              onToggleFavorite: controller.toggleFavorite,
+              onOpen: (pokemon) => _openDetail(pokemon),
             ),
+            Expanded(child: _buildBody(state)),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildBody({
-    required BuildContext context,
-    required PokemonProvider provider,
-    required List<Pokemon> filteredPokemon,
-  }) {
-    if (provider.isLoading) {
+  Widget _buildBody(PokemonState state) {
+    final controller = ref.read(pokemonControllerProvider.notifier);
+    if (state.status == PokemonLoadStatus.loading) {
       return const PokedexLoadingWidget();
     }
-
-    if (provider.isError) {
+    if (state.status == PokemonLoadStatus.error) {
       return PokedexErrorWidget(
-        errorMessage: provider.errorMessage ?? 'An error occurred',
-        onRetry: () => context.read<PokemonProvider>().fetchPokemon(limit: 30),
+        errorMessage: state.errorMessage ?? 'Unable to load Pokémon.',
+        onRetry: controller.fetch,
       );
     }
-
-    final allPokemon = provider.pokemonList;
-
-    if (allPokemon.isEmpty) {
-      return PokedexEmptyWidget(
-        onRefresh: () =>
-            context.read<PokemonProvider>().fetchPokemon(limit: 30),
-      );
+    if (state.pokemon.isEmpty) {
+      return PokedexEmptyWidget(onRefresh: controller.fetch);
     }
-
-    if (filteredPokemon.isEmpty) {
+    if (state.filteredPokemon.isEmpty) {
       return Center(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(
-                Icons.filter_alt_off_rounded,
-                size: 48,
-                color: Colors.white54,
-              ),
-              const SizedBox(height: 12),
-              Text(
-                'No ${provider.selectedType.toUpperCase()} Pokémon In The First 30',
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                'None of the first 30 Pokémon match this type filter.',
-                textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.white60, fontSize: 12),
-              ),
-              const SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: () {
-                  context.read<PokemonProvider>().selectType('all');
-                },
-                child: const Text('SHOW ALL POKÉMON'),
-              ),
-            ],
-          ),
+        child: ElevatedButton(
+          onPressed: () => controller.selectType('all'),
+          child: const Text('SHOW ALL POKÉMON'),
         ),
       );
     }
 
     return RefreshIndicator(
-      onRefresh: () =>
-          context.read<PokemonProvider>().refreshPokemon(limit: 30),
+      onRefresh: controller.fetch,
       color: Theme.of(context).primaryColor,
       child: LayoutBuilder(
         builder: (context, constraints) {
-          final crossAxisCount = constraints.maxWidth > 900
+          final columns = constraints.maxWidth > 900
               ? 4
               : (constraints.maxWidth > 600 ? 3 : 2);
-
           return GridView.builder(
             padding: const EdgeInsets.all(10),
             physics: const AlwaysScrollableScrollPhysics(),
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: crossAxisCount,
-              childAspectRatio: 0.82,
+              crossAxisCount: columns,
+              childAspectRatio: 0.78,
               crossAxisSpacing: 10,
               mainAxisSpacing: 10,
             ),
-            itemCount: filteredPokemon.length,
+            itemCount: state.filteredPokemon.length,
             itemBuilder: (context, index) {
-              final pokemon = filteredPokemon[index];
+              final pokemon = state.filteredPokemon[index];
               return PokemonCard(
                 pokemon: pokemon,
-                onTap: () {
-                  context.read<PokemonProvider>().selectPokemon(pokemon);
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) => const PokemonDetailScreen(),
-                    ),
-                  );
-                },
+                nickname: state.nicknameFor(pokemon),
+                isFavorite: state.favoriteIds.contains(pokemon.id),
+                onToggleFavorite: () => controller.toggleFavorite(pokemon),
+                onEditNickname: () => _editNickname(pokemon),
+                onTap: () => _openDetail(pokemon),
               );
             },
           );
         },
       ),
+    );
+  }
+
+  void _openDetail(Pokemon pokemon) {
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => PokemonDetailScreen(pokemon: pokemon)),
+    );
+  }
+
+  Future<void> _editNickname(Pokemon pokemon) async {
+    final controller = TextEditingController(
+      text: ref.read(pokemonControllerProvider).nicknameFor(pokemon) ?? '',
+    );
+    final nickname = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Nickname for ${pokemon.capitalizedName}'),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          maxLength: 20,
+          decoration: const InputDecoration(labelText: 'Custom nickname'),
+        ),
+        actions: [
+          if (controller.text.isNotEmpty)
+            TextButton(
+              onPressed: () => Navigator.pop(context, ''),
+              child: const Text('REMOVE'),
+            ),
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('CANCEL'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, controller.text),
+            child: const Text('SAVE'),
+          ),
+        ],
+      ),
+    );
+    controller.dispose();
+    if (nickname != null && mounted) {
+      ref
+          .read(pokemonControllerProvider.notifier)
+          .setNickname(pokemon, nickname);
+    }
+  }
+}
+
+class _FavoritesPanel extends StatefulWidget {
+  final List<Pokemon> favorites;
+  final Map<int, String> nicknames;
+  final ValueChanged<Pokemon> onToggleFavorite;
+  final ValueChanged<Pokemon> onOpen;
+
+  const _FavoritesPanel({
+    required this.favorites,
+    required this.nicknames,
+    required this.onToggleFavorite,
+    required this.onOpen,
+  });
+
+  @override
+  State<_FavoritesPanel> createState() => _FavoritesPanelState();
+}
+
+class _FavoritesPanelState extends State<_FavoritesPanel> {
+  bool expanded = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        ListTile(
+          dense: true,
+          textColor: Colors.white,
+          iconColor: Colors.white,
+          title: Text('FAVORITES (${widget.favorites.length})'),
+          leading: const Icon(Icons.favorite),
+          trailing: Icon(expanded ? Icons.expand_less : Icons.expand_more),
+          onTap: () => setState(() => expanded = !expanded),
+        ),
+        if (expanded)
+          Container(
+            constraints: const BoxConstraints(maxHeight: 130),
+            color: Colors.black12,
+            child: widget.favorites.isEmpty
+                ? const Center(
+                    child: Padding(
+                      padding: EdgeInsets.all(16),
+                      child: Text(
+                        'No Pokémon have been favorited yet.',
+                        style: TextStyle(color: Colors.white70),
+                      ),
+                    ),
+                  )
+                : ListView(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    children: widget.favorites
+                        .map(
+                          (pokemon) => Material(
+                            color: Colors.transparent,
+                            child: ListTile(
+                              dense: true,
+                              onTap: () => widget.onOpen(pokemon),
+                              leading: Image.network(
+                                pokemon.imageUrl,
+                                width: 38,
+                                errorBuilder: (_, _, _) =>
+                                    const Icon(Icons.catching_pokemon),
+                              ),
+                              title: Text(
+                                widget.nicknames[pokemon.id] ??
+                                    pokemon.capitalizedName,
+                                style: const TextStyle(color: Colors.white),
+                              ),
+                              subtitle: Text(
+                                pokemon.capitalizedName,
+                                style: const TextStyle(color: Colors.white60),
+                              ),
+                              trailing: IconButton(
+                                icon: const Icon(
+                                  Icons.favorite,
+                                  color: Colors.redAccent,
+                                ),
+                                onPressed: () =>
+                                    widget.onToggleFavorite(pokemon),
+                              ),
+                            ),
+                          ),
+                        )
+                        .toList(),
+                  ),
+          ),
+      ],
     );
   }
 }

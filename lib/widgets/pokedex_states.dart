@@ -41,10 +41,7 @@ class PokedexLoadingWidget extends StatelessWidget {
           const SizedBox(height: 6),
           Text(
             'Retrieving entries from Professor Oak\'s PC',
-            style: TextStyle(
-              fontSize: 13,
-              color: Colors.grey.shade600,
-            ),
+            style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
           ),
         ],
       ),
@@ -128,10 +125,7 @@ class PokedexErrorWidget extends StatelessWidget {
 class PokedexEmptyWidget extends StatelessWidget {
   final VoidCallback onRefresh;
 
-  const PokedexEmptyWidget({
-    super.key,
-    required this.onRefresh,
-  });
+  const PokedexEmptyWidget({super.key, required this.onRefresh});
 
   @override
   Widget build(BuildContext context) {
@@ -141,11 +135,7 @@ class PokedexEmptyWidget extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              Icons.catching_pokemon,
-              size: 64,
-              color: Colors.grey.shade400,
-            ),
+            Icon(Icons.catching_pokemon, size: 64, color: Colors.grey.shade400),
             const SizedBox(height: 16),
             const Text(
               'No Pokémon Discovered',
@@ -159,10 +149,7 @@ class PokedexEmptyWidget extends StatelessWidget {
             Text(
               'No regional entries currently exist in the database.',
               textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 13,
-                color: Colors.grey.shade600,
-              ),
+              style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
             ),
             const SizedBox(height: 20),
             ElevatedButton.icon(

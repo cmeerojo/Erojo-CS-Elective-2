@@ -1,16 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'providers/pokemon_provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'screens/pokedex_screen.dart';
 import 'theme/app_theme.dart';
 
 void main() {
-  runApp(
-    ChangeNotifierProvider(
-      create: (_) => PokemonProvider(),
-      child: const PokedexApp(),
-    ),
-  );
+  runApp(const PokedexApp());
 }
 
 class PokedexApp extends StatelessWidget {
@@ -18,11 +12,13 @@ class PokedexApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Pokédex FireRed',
-      debugShowCheckedModeBanner: false,
-      theme: AppTheme.fireRedTheme,
-      home: const PokedexScreen(),
+    return ProviderScope(
+      child: MaterialApp(
+        title: 'Pokédex FireRed',
+        debugShowCheckedModeBanner: false,
+        theme: AppTheme.fireRedTheme,
+        home: const PokedexScreen(),
+      ),
     );
   }
 }

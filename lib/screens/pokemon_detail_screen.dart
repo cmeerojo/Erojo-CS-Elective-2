@@ -1,84 +1,80 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/pokemon.dart';
-import '../providers/pokemon_provider.dart';
+import '../providers/pokemon_riverpod.dart';
 import '../theme/app_theme.dart';
 import '../widgets/pokedex_background.dart';
 
-class PokemonDetailScreen extends StatelessWidget {
-  const PokemonDetailScreen({super.key});
+class PokemonDetailScreen extends ConsumerWidget {
+  final Pokemon pokemon;
+
+  const PokemonDetailScreen({super.key, required this.pokemon});
 
   @override
-  Widget build(BuildContext context) {
-    final provider = context.watch<PokemonProvider>();
-    final pokemon = provider.selectedPokemon;
-
+  Widget build(BuildContext context, WidgetRef ref) {
+    final state = ref.watch(pokemonControllerProvider);
+    final controller = ref.read(pokemonControllerProvider.notifier);
+    final nickname = state.nicknameFor(pokemon);
+    final isFavorite = state.favoriteIds.contains(pokemon.id);
     return Scaffold(
       body: PokedexBackground(
-        child: pokemon == null
-            ? _buildNoSelection(context)
-            : Column(
-                children: [
-                  _buildHeader(context, pokemon.formattedId),
-                  Expanded(
-                    child: SingleChildScrollView(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Column(
-                        children: [
-                          _buildArtworkDisplay(
-                            pokemon.imageUrl,
-                            pokemon.formattedId,
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            pokemon.capitalizedName,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 26,
-                              fontWeight: FontWeight.w900,
-                              letterSpacing: 1.5,
-                            ),
-                          ),
-                          const SizedBox(height: 10),
-                          _buildTypeBadges(pokemon.types),
-                          const SizedBox(height: 20),
-                          _buildDataEntryCard(pokemon),
-                        ],
+        child: Column(
+          children: [
+            _buildHeader(
+              context,
+              pokemon.formattedId,
+              isFavorite,
+              () => controller.toggleFavorite(pokemon),
+              controller.fetch,
+            ),
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  children: [
+                    _buildArtworkDisplay(pokemon.imageUrl, pokemon.formattedId),
+                    const SizedBox(height: 16),
+                    Text(
+                      pokemon.capitalizedName,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 26,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 1.5,
                       ),
                     ),
-                  ),
-                ],
+                    if (nickname != null)
+                      Text(
+                        'Nickname: $nickname',
+                        style: const TextStyle(
+                          color: Colors.white70,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    const SizedBox(height: 10),
+                    _buildTypeBadges(pokemon.types),
+                    const SizedBox(height: 20),
+                    _buildDataEntryCard(pokemon, nickname, () {
+                      _showNicknameEditor(context, ref, pokemon);
+                    }),
+                  ],
+                ),
               ),
-      ),
-    );
-  }
-
-  Widget _buildNoSelection(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Icon(Icons.catching_pokemon, size: 64, color: Colors.white38),
-          const SizedBox(height: 16),
-          const Text(
-            'No Pokémon Selected',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
             ),
-          ),
-          const SizedBox(height: 16),
-          ElevatedButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('RETURN TO POKÉDEX'),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildHeader(BuildContext context, String formattedId) {
+  Widget _buildHeader(
+    BuildContext context,
+    String formattedId,
+    bool isFavorite,
+    VoidCallback onToggleFavorite,
+    VoidCallback onRefresh,
+  ) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: const BoxDecoration(
@@ -147,15 +143,22 @@ class PokemonDetailScreen extends StatelessWidget {
               ),
             ),
             IconButton(
+              icon: Icon(
+                isFavorite ? Icons.favorite : Icons.favorite_border,
+                color: Colors.white,
+                size: 22,
+              ),
+              tooltip: isFavorite ? 'Remove favorite' : 'Add favorite',
+              onPressed: onToggleFavorite,
+            ),
+            IconButton(
               icon: const Icon(
                 Icons.refresh_rounded,
                 color: Colors.white,
                 size: 22,
               ),
               tooltip: 'Refresh Pokédex',
-              onPressed: () {
-                context.read<PokemonProvider>().refreshPokemon(limit: 30);
-              },
+              onPressed: onRefresh,
             ),
           ],
         ),
@@ -267,7 +270,11 @@ class PokemonDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildDataEntryCard(Pokemon pokemon) {
+  Widget _buildDataEntryCard(
+    Pokemon pokemon,
+    String? nickname,
+    VoidCallback onEditNickname,
+  ) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
@@ -308,12 +315,21 @@ class PokemonDetailScreen extends StatelessWidget {
           const Divider(height: 20, thickness: 1),
           _buildInfoRow('National Pokédex ID', pokemon.formattedId),
           _buildInfoRow('Species Name', pokemon.capitalizedName),
+          _buildInfoRow('Custom Nickname', nickname ?? 'Not assigned'),
           _buildInfoRow(
             'Primary Type',
-            pokemon.types.isNotEmpty ? pokemon.types.first.toUpperCase() : 'UNKNOWN',
+            pokemon.types.isNotEmpty
+                ? pokemon.types.first.toUpperCase()
+                : 'UNKNOWN',
           ),
           if (pokemon.types.length > 1)
             _buildInfoRow('Secondary Type', pokemon.types[1].toUpperCase()),
+          const SizedBox(height: 8),
+          OutlinedButton.icon(
+            onPressed: onEditNickname,
+            icon: const Icon(Icons.edit_note_rounded),
+            label: Text(nickname == null ? 'ASSIGN NICKNAME' : 'EDIT NICKNAME'),
+          ),
           const SizedBox(height: 8),
           Container(
             padding: const EdgeInsets.all(10),
@@ -345,6 +361,44 @@ class PokemonDetailScreen extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  Future<void> _showNicknameEditor(
+    BuildContext context,
+    WidgetRef ref,
+    Pokemon pokemon,
+  ) async {
+    final controller = TextEditingController(
+      text: ref.read(pokemonControllerProvider).nicknameFor(pokemon) ?? '',
+    );
+    final nickname = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Edit nickname'),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          maxLength: 20,
+          decoration: const InputDecoration(labelText: 'Custom nickname'),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, ''),
+            child: const Text('REMOVE'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, controller.text),
+            child: const Text('SAVE'),
+          ),
+        ],
+      ),
+    );
+    controller.dispose();
+    if (nickname != null) {
+      ref
+          .read(pokemonControllerProvider.notifier)
+          .setNickname(pokemon, nickname);
+    }
   }
 
   Widget _buildInfoRow(String label, String value) {

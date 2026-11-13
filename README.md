@@ -35,3 +35,16 @@ page when configuration is missing. Instead, the showroom displays a
 configuration error and a Retry button. Once configured, the service sends
 `gte('price', minPrice)`, `lte('price', maxPrice)`, and `range(start, end)` to
 Supabase. Riverpod owns the active price range and page.
+
+## GitHub authentication
+
+This app includes GitHub as an additional Supabase authentication provider.
+In the Supabase dashboard, open **Authentication > Providers > GitHub**, enable
+the provider, and enter the GitHub OAuth client ID and secret from the GitHub
+OAuth app. Set the GitHub OAuth app's callback URL to the Supabase callback
+URL shown in the provider settings.
+
+Once enabled, the showroom app bar provides **Sign in with GitHub**. The
+button is available when the Supabase environment variables are configured;
+the signed-in user's email is shown in the app bar and the menu provides
+sign-out.

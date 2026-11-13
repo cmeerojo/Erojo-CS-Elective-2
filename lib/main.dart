@@ -14,11 +14,19 @@ Future<void> main() async {
     await Supabase.initialize(url: url, publishableKey: key);
   }
 
-  runApp(const ProviderScope(child: JdmApp()));
+  runApp(
+    ProviderScope(
+      child: JdmApp(
+        supabaseConfigured: url?.isNotEmpty == true && key?.isNotEmpty == true,
+      ),
+    ),
+  );
 }
 
 class JdmApp extends StatelessWidget {
-  const JdmApp({super.key});
+  final bool supabaseConfigured;
+
+  const JdmApp({super.key, required this.supabaseConfigured});
 
   @override
   Widget build(BuildContext context) {
@@ -27,7 +35,7 @@ class JdmApp extends StatelessWidget {
         title: 'JDM Showroom',
         debugShowCheckedModeBanner: false,
         theme: AppTheme.jdmTheme,
-        home: const JdmShowroomScreen(),
+        home: JdmShowroomScreen(supabaseConfigured: supabaseConfigured),
       ),
     );
   }

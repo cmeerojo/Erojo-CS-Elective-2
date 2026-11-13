@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../providers/jdm_riverpod.dart';
 import '../widgets/jdm_car_card.dart';
 
 class JdmShowroomScreen extends ConsumerStatefulWidget {
-  const JdmShowroomScreen({super.key});
+  final bool supabaseConfigured;
+
+  const JdmShowroomScreen({super.key, required this.supabaseConfigured});
 
   @override
   ConsumerState<JdmShowroomScreen> createState() => _JdmShowroomScreenState();
@@ -31,6 +34,7 @@ class _JdmShowroomScreenState extends ConsumerState<JdmShowroomScreen> {
       appBar: AppBar(
         title: const Text('JDM Showroom'),
         actions: [
+          if (widget.supabaseConfigured) const _GitHubAuthButton(),
           IconButton(
             onPressed: () => controller.fetchPage(),
             icon: const Icon(Icons.refresh),
@@ -120,6 +124,69 @@ class _JdmShowroomScreenState extends ConsumerState<JdmShowroomScreen> {
             child: LinearProgressIndicator(),
           ),
       ],
+    );
+  }
+}
+
+class _GitHubAuthButton extends StatelessWidget {
+  const _GitHubAuthButton();
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<AuthState>(
+      stream: Supabase.instance.client.auth.onAuthStateChange,
+      builder: (context, snapshot) {
+        final session =
+            snapshot.data?.session ??
+            Supabase.instance.client.auth.currentSession;
+        if (session == null) {
+          return TextButton.icon(
+            onPressed: () async {
+              try {
+                await Supabase.instance.client.auth.signInWithOAuth(
+                  OAuthProvider.github,
+                );
+              } on AuthException catch (error) {
+                if (!context.mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('GitHub sign-in failed: ${error.message}'),
+                  ),
+                );
+              }
+            },
+            icon: const Icon(Icons.login),
+            label: const Text('Sign in using GitHub'),
+            style: TextButton.styleFrom(foregroundColor: Colors.white),
+          );
+        }
+
+        return PopupMenuButton<String>(
+          onSelected: (value) async {
+            if (value != 'sign_out') return;
+            try {
+              await Supabase.instance.client.auth.signOut();
+            } on AuthException catch (error) {
+              if (!context.mounted) return;
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Sign-out failed: ${error.message}')),
+              );
+            }
+          },
+          itemBuilder: (context) => const [
+            PopupMenuItem(value: 'sign_out', child: Text('Sign out')),
+          ],
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            child: Center(
+              child: Text(
+                session.user.email ?? 'Signed in',
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 }
